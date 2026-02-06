@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Intraday Pulse | Real-Time Scanner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .signal-animate { animation: highlight 1.5s ease-out; }
+        @keyframes highlight {
+            0% { background: #2962ff33; transform: scale(1.02); }
+            100% { background: transparent; transform: scale(1); }
+        }
+        .bg-dark { background: #08090a; }
+        .border-gray { border-color: #2a2e39; }
+    </style>
+</head>
+<body class="bg-dark text-gray-300 h-screen flex flex-col">
+    <header class="h-14 border-b border-gray flex items-center justify-between px-6 bg-[#131722]">
+        <h1 class="text-xl font-bold text-white tracking-tighter">PULSE<span class="text-blue-500">_SCANNER</span></h1>
+        <div id="status" class="text-xs text-green-500 font-bold">● SCANNER ACTIVE (Mili-seconds mode)</div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside class="w-96 border-r border-gray bg-[#0d1017] flex flex-col">
+            <div class="p-3 border-b border-gray bg-[#131722] text-[10px] font-black uppercase text-gray-500">Live Breakout Signals</div>
+            <div id="signal-container" class="flex-1 overflow-y-auto p-2 space-y-2">
+                </div>
+        </aside>
+
+        <main class="flex-1 bg-black relative">
+            <div id="tv_chart" class="h-full"></div>
+        </main>
+    </div>
+
+    <audio id="alert-sound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        // TradingView Initialization
+        new TradingView.widget({
+            "autosize": true, "symbol": "NSE:NIFTY", "interval": "1",
+            "timezone": "Asia/Kolkata", "theme": "dark", "container_id": "tv_chart"
+        });
+
+        async function fetchSignals() {
+            try {
+                const response = await fetch('/scan');
+                const data = await response.json();
+                addSignal(data);
+            } catch (e) { console.log("Scanning..."); }
+        }
+
+        function addSignal(data) {
+            const container = document.getElementById('signal-container');
+            const audio = document.getElementById('alert-sound');
+            
+            const div = document.createElement('div');
+            div.className = `p-4 rounded-lg border border-gray signal-animate bg-[#131722]`;
+            div.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-white text-lg">${data.stock}</span>
+                    <span class="${data.type === 'BUY' ? 'text-green-500' : 'text-red-500'} font-black text-xs">${data.type} @ ${data.price}</span>
+                </div>
+                <div class="flex justify-between mt-2 items-center">
+                    <span class="text-[10px] text-gray-500">${data.timestamp}</span>
+                    <span class="text-[10px] font-bold text-blue-400">STRENGTH: ${data.strength}%</span>
+                </div>
+            `;
+            container.prepend(div);
+            audio.play(); // Sound alert!
+
+            if(container.children.length > 10) container.lastChild.remove();
+        }
+
+        // Har 3 second mein backend se signal maango
+        setInterval(fetchSignals, 3000);
+    </script>
+</body>
+</html>
