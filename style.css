@@ -1,0 +1,21 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2b2f36;
+    border-radius: 10px;
+}
+
+.price-flash-green {
+    animation: flashGreen 0.5s;
+}
+
+@keyframes flashGreen {
+    from { background-color: rgba(0, 192, 118, 0.2); }
+    to { background-color: transparent; }
+}
